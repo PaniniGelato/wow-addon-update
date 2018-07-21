@@ -6,7 +6,7 @@ Twitch is rather buggy, so I create this script to update wow-addons
 2. pip install requests and BeautifulSoup4
 3. modify config files as you like
 4. run it with `python WowAddonUpdate.py`
-5. --f can force a full update and --dbm only update DBM-Mods
+5. -f can force a full update and -dbm only update DBM-Mods
 
 # Config
 The config.ini looks like below:

@@ -6,6 +6,7 @@ import updater
 parser = argparse.ArgumentParser()
 parser.add_argument("-dbm", help="only update dbm", required=False, action="store_true")
 parser.add_argument("-f", help="force a full update", required=False, action="store_true")
+parser.add_argument("-r", help="re-scan addon directory and generate addons.csv", required=False, action="store_true")
 parser.parse_args()
 
 if __name__ == "__main__":
@@ -13,7 +14,7 @@ if __name__ == "__main__":
     if not os.path.isdir(utils.wow_root):
         print("wow dir error")
         exit(0)
-    if not os.path.isfile(utils.addons) or os.stat(utils.addons).st_size == 0 or args.f:
+    if not os.path.isfile(utils.addons) or os.stat(utils.addons).st_size == 0 or args.r:
         print("cannot find addons-config-file, trying to generate it...")
         utils.init_addon_config(utils.wow_root, utils.addons)
     if args.dbm:

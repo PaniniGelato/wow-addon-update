@@ -46,7 +46,7 @@ def init_addon_config(wow_root, addons_config):
                 if not dep and not str(f).startswith("DBM-"):
                     if updater.ft_map.get(f):
                         f = updater.ft_map.get(f)
-                    if f == "NULL":
+                    if f != "NULL":
                         f, data = updater.fetch_addon_data(f)
                         if data:
                             addon_list.append({"name": f, "version": version, "url": url})

@@ -14,7 +14,10 @@ if __name__ == "__main__":
     if not os.path.isdir(utils.wow_root):
         print("wow dir error")
         exit(0)
-    if not os.path.isfile(utils.addons) or os.stat(utils.addons).st_size == 0 or args.r:
+    if args.r:
+        utils.init_addon_config(utils.wow_root, utils.addons)
+        exit(0)
+    if not os.path.isfile(utils.addons) or os.stat(utils.addons).st_size == 0:
         print("cannot find addons-config-file, trying to generate it...")
         utils.init_addon_config(utils.wow_root, utils.addons)
     if args.dbm:

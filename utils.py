@@ -42,7 +42,8 @@ def init_addon_config(wow_root, addons_config):
                         dep = True
                     if l.startswith("## X-Website"):
                         url = l[13:]
-                #print(f + ":" + str(dep) + ":" + version)
+                if f == "MeetingStone":
+                    addon_list.append({"name": f, "version": version, "url": url})
                 if not dep and not str(f).startswith("DBM-"):
                     if updater.ft_map.get(f):
                         f = updater.ft_map.get(f)

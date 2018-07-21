@@ -3,9 +3,9 @@ import json
 from bs4 import BeautifulSoup
 import zipfile
 import io
-import utils
 import re
 import traceback
+import config
 
 ft_map = {}
 with open("faultTolerance.csv", "r") as ft:
@@ -39,7 +39,7 @@ def only_dbm(force=False):
                     "Useragent": "Mozilla / 5.0(Windows NT 10.0; Win64; x64) AppleWebKit / 537.36(KHTML, like Gecko) Chrome / 66.0.3359.170 Safari / 537.36"}
                 )
                 z = zipfile.ZipFile(io.BytesIO(res.content))
-                z.extractall(path=utils.wow_root)
+                z.extractall(path=config.wow_root)
             dbm_new_lines.append("%s,%s,%s" % (arr[0], fName, str(dd["ProjectFileID"])))
     with open("dbm.csv", "w") as dbm:
         for ll in dbm_new_lines:
@@ -65,30 +65,34 @@ def all_addons(force=False):
                     real_name = ft_map.get(real_name)
                 if real_name == "NULL":
                     continue
-                # eg:{"ProjectFileID": 2585875, "FileName": "2.16.1"}
-                _, dd = fetch_addon_data(arr[0])
-                if not dd:
-                    print("unable to update %s..." % real_name)
-                    new_lines.append("%s,%s,%s" % (arr[0], fName, "0"))
-                    continue
-                print(dd)
-                flag = False
-                if dd["FileName"] != arr[1] and arr[1] != "_":
-                    flag = True
-                    fName = dd["FileName"]
-                elif dd["ProjectFileID"] > current_ver > 0:
-                    flag = True
-                if flag or force:
-                    url = "https://www.curseforge.com/wow/addons/%s/download/%s/file" % (arr[0], str(dd["ProjectFileID"]))
-                    print("updating %s, %s" % (arr[0], url))
-                    res = requests.get(url, headers={
-                        "Referer": "https://www.curseforge.com",
-                        "Useragent": "Mozilla / 5.0(Windows NT 10.0; Win64; x64) AppleWebKit / 537.36(KHTML, like Gecko) Chrome / 66.0.3359.170 Safari / 537.36"}
-                    )
-                    z = zipfile.ZipFile(io.BytesIO(res.content))
-                    z.extractall(path=utils.wow_root)
-                    new_line = "%s,%s,%s" % (arr[0], fName, str(dd["ProjectFileID"]))
-            except BaseException as e:
+                elif real_name == "MeetingStone":
+                    new_ver = download_meeting_stone(fName)
+                    new_line = "%s,%s,%s" % ("MeetingStone", new_ver, "0")
+                else:
+                    # eg:{"ProjectFileID": 2585875, "FileName": "2.16.1"}
+                    _, dd = fetch_addon_data(arr[0])
+                    if not dd:
+                        print("unable to update %s..." % real_name)
+                        new_lines.append("%s,%s,%s" % (arr[0], fName, "0"))
+                        continue
+                    print(dd)
+                    flag = False
+                    if dd["FileName"] != arr[1] and arr[1] != "_":
+                        flag = True
+                        fName = dd["FileName"]
+                    elif dd["ProjectFileID"] > current_ver > 0:
+                        flag = True
+                    if flag or force:
+                        url = "https://www.curseforge.com/wow/addons/%s/download/%s/file" % (arr[0], str(dd["ProjectFileID"]))
+                        print("updating %s, %s" % (arr[0], url))
+                        res = requests.get(url, headers={
+                            "Referer": "https://www.curseforge.com",
+                            "Useragent": "Mozilla / 5.0(Windows NT 10.0; Win64; x64) AppleWebKit / 537.36(KHTML, like Gecko) Chrome / 66.0.3359.170 Safari / 537.36"}
+                        )
+                        z = zipfile.ZipFile(io.BytesIO(res.content))
+                        z.extractall(path=config.wow_root)
+                        new_line = "%s,%s,%s" % (arr[0], fName, str(dd["ProjectFileID"]))
+            except Exception:
                 traceback.print_exc()
             new_lines.append(new_line)
     with open("addons.csv", "w") as addons:
@@ -118,3 +122,27 @@ def fetch_addon_data(addon_name):
         if el:
             data = json.loads(el.get("data-action-value"))
     return addon_name, data
+
+
+def download_meeting_stone(file_name):
+    url = "http://w.163.com/special/wowsocial/"
+    resp = requests.get(url)
+    soup = BeautifulSoup(resp.content, "html.parser")
+    all = soup.find("div", attrs={"class": "download-buttons"}).findChildren()
+    for a in all:
+        if a.text == "集合石插件包":
+            u = a.get("href")
+            new_ver = u[u.rfind("-")+1:len(u)-4]
+            break
+    try:
+        if file_name != new_ver:
+            print("updating meetingStones, %s" % u)
+            res = requests.get(u, headers={
+                "Referer": "http://w.163.com/special/wowsocial/",
+                "Useragent": "Mozilla / 5.0(Windows NT 10.0; Win64; x64) AppleWebKit / 537.36(KHTML, like Gecko) Chrome / 66.0.3359.170 Safari / 537.36"}
+            )
+            z = zipfile.ZipFile(io.BytesIO(res.content))
+            z.extractall(path=config.wow_root)
+    except Exception:
+        traceback.print_exc()
+    return new_ver

@@ -120,25 +120,29 @@ def all_addons(force=False):
     addon_map = read_addon()
     with ThreadPoolExecutor(max_workers=config.thread) as executor:
         for arr in addon_map:
-            real_name = arr[0]
-            fName = arr[1]
-            current_ver = int(arr[2])
-            new_line = "%s,%s,%s" % (real_name, fName, current_ver)
-            try:
-                if config.ft_map.get(real_name):
-                    real_name = config.ft_map.get(real_name)
-                if real_name == "NULL":
-                    continue
-                elif real_name == "MeetingStone":
-                    new_ver = download_meeting_stone(fName)
-                    new_line = "%s,%s,%s" % ("MeetingStone", new_ver, "0")
-                else:
-                    # eg:{"ProjectFileID": 2585875, "FileName": "2.16.1"}
-                    new_arr = do_update(real_name, fName, current_ver, force)
-                    new_line = "%s,%s,%s" % (real_name, new_arr[1], new_arr[2])
-            except Exception:
-                traceback.print_exc()
-            new_line_list.append(new_line)
+
+            def run(this_arr):
+                real_name = this_arr[0]
+                fName = this_arr[1]
+                current_ver = int(this_arr[2])
+                this_line = "%s,%s,%s" % (this_arr[0], fName, current_ver)
+                try:
+                    if real_name in config.ft_map:
+                        real_name = config.ft_map.get(real_name)
+                    if real_name == "NULL":
+                        return
+                    elif real_name == "MeetingStone":
+                        new_ver = download_meeting_stone(fName)
+                        this_line = "%s,%s,%s" % ("MeetingStone", new_ver, "0")
+                    else:
+                        new_arr = do_update(real_name, fName, current_ver, force)
+                        this_line = "%s,%s,%s" % (this_arr[0], new_arr[1], new_arr[2])
+                except Exception:
+                    print("update %s error" % this_arr[0])
+                    traceback.print_exc()
+                new_line_list.append(this_line)
+
+            executor.submit(run, arr)
     with open(config.addons, "w") as addons:
         for line in new_line_list:
             addons.write(line)
@@ -152,10 +156,13 @@ def fetch_addon_data(addon_name, guess=True):
     :param guess:
     :return:
     """
+    if addon_name in config.ft_map:
+        names = [config.ft_map.get(addon_name)]
+    else:
+        names = [addon_name]
+        if guess:
+            names = guess_addon_name(addon_name)
     # only support curse now
-    names = [addon_name]
-    if guess:
-        names = guess_addon_name(addon_name)
     for name in names:
         url = "https://www.curseforge.com/wow/addons/%s/files" % name
         print(url)

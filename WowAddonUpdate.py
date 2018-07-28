@@ -25,5 +25,5 @@ if __name__ == "__main__":
         updater.only_dbm(args.f)
     else:
         updater.all_addons(args.f)
-        #updater.only_dbm(args.f)
+        updater.only_dbm(args.f)
     print("done!")

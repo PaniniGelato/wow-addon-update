@@ -8,6 +8,7 @@ addons = config["WOW"]["ADDONS"]
 dbm = config["WOW"]["DBM"]
 ft = config["WOW"]["FT"]
 thread = int(config["WOW"]["THREAD"])
+release_type = config["WOW"]["RELEASE_TYPE"]
 
 
 def load_ft_map():

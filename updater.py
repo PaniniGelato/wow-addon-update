@@ -143,10 +143,10 @@ def all_addons(force=False):
                 new_line_list.append(this_line)
 
             executor.submit(run, arr)
-    with open(config.addons, "w") as addons:
-        for line in new_line_list:
-            addons.write(line)
-            addons.write("\n")
+    #with open(config.addons, "w") as addons:
+    #    for line in new_line_list:
+    #        addons.write(line)
+    #        addons.write("\n")
 
 
 def fetch_addon_data(addon_name, guess=True):
@@ -163,15 +163,22 @@ def fetch_addon_data(addon_name, guess=True):
         if guess:
             names = guess_addon_name(addon_name)
     # only support curse now
+    _el = None
     for name in names:
-        url = "https://www.curseforge.com/wow/addons/%s/files" % name
-        print(url)
-        resp = requests.get(url)
-        soup = BeautifulSoup(resp.content, "html.parser")
-        el = soup.find("a", attrs={"data-action": "install-file"})
+        _url = "https://www.curseforge.com/wow/addons/%s/files" % name
+        print(_url)
+        _resp = requests.get(_url)
+        _soup = BeautifulSoup(_resp.content, "html.parser")
+        _tr_list = _soup.find_all("tr", attrs={"class": "project-file-list__item"})
+        for _tr in _tr_list:
+            _first_td = _tr.find_all("td")[0]
+            _title = _first_td.span["title"]
+            if _title.lower() == config.release_type.lower():
+                _el = _tr.find("a", attrs={"data-action": "install-file"})
+                break
         data = None
-        if el:
-            data = json.loads(el.get("data-action-value"))
+        if _el:
+            data = json.loads(_el.get("data-action-value"))
             break
     return name, data
 
@@ -200,11 +207,11 @@ def download_meeting_stone(current_file_name):
     :param current_file_name:
     :return:
     """
-    url = "http://w.163.com/special/wowsocial/"
-    resp = requests.get(url)
-    soup = BeautifulSoup(resp.content, "html.parser")
-    all = soup.find("div", attrs={"class": "download-buttons"}).findChildren()
-    for a in all:
+    _url = "http://w.163.com/special/wowsocial/"
+    _resp = requests.get(_url)
+    _soup = BeautifulSoup(_resp.content, "html.parser")
+    _all = _soup.find("div", attrs={"class": "download-buttons"}).findChildren()
+    for a in _all:
         if a.text == "集合石插件包":
             u = a.get("href")
             new_ver = u[u.rfind("-")+1:len(u)-4]

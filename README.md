@@ -22,8 +22,12 @@ ROOT = G:\\World of Warcraft\\interface\\AddOns
 ADDONS = addons.csv
 DBM = dbm.csv
 FT = faultTolerance.csv
+THREAD = 2
+RELEASE_TYPE = beta
 ```
-1. The ROOT variable defines the location of your wow-addons directory
+1. ROOT defines the location of your wow-addons directory
 2. The script will generate the addons.csv on launch if it is not exists. This file contains the detail of your addons, which is grap from .toc files
 3. The dbm.csv is for Deadly-Boss-Mod, which has so many folder and mods that is difficult to handle, so I make a static map to solve it. You can edit this file to add or delete DBM-mods as you like.
 4. The faultTolerance.csv is a naming map to handle some problems
+5. THREAD controls concurrency, larger number can make it faster
+6. RELEASE_TYPE defaults to release, can be alpha or beta if you wish

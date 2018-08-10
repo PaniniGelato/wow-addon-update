@@ -143,10 +143,10 @@ def all_addons(force=False):
                 new_line_list.append(this_line)
 
             executor.submit(run, arr)
-    #with open(config.addons, "w") as addons:
-    #    for line in new_line_list:
-    #        addons.write(line)
-    #        addons.write("\n")
+    with open(config.addons, "w") as addons:
+        for line in new_line_list:
+            addons.write(line)
+            addons.write("\n")
 
 
 def fetch_addon_data(addon_name, guess=True):

@@ -27,7 +27,7 @@ def only_dbm(force=False):
         for key in dbm_map:
             d = dbm_map.get(key)
             fName = d["file"]
-            current_ver = int(d["version"])
+            current_ver = d["version"]
             # eg:{"ProjectFileID": 2585875, "FileName": "2.16.1"}
             ff = executor.submit(do_update, d["name"], fName, current_ver, force)
             future_list.append(ff)
@@ -48,32 +48,31 @@ def only_dbm(force=False):
 
 
 def do_update(addon_name, current_file_name, current_file_ver, force=False):
-    _, dd = fetch_addon_data(addon_name, guess=False)
-    if not dd:
+    name, href = fetch_addon_data(addon_name, guess=False)
+    if not href:
         return None
-    print(dd)
+    print(name + ", " + href)
     flag = False
-    new_file_name = dd["FileName"]
-    new_file_id = dd["ProjectFileID"]
-    if new_file_name != current_file_name and current_file_name != "_":
-        flag = True
-    elif new_file_id > current_file_ver > 0:
+    #new_file_name = name
+    #new_file_id = dd["ProjectFileID"]
+    #if new_file_name != current_file_name and current_file_name != "_":
+    #    flag = True
+    if href != current_file_ver:
         flag = True
     if flag or force:
-        download_extract_curse_addon(addon_name, str(new_file_id))
-    return [addon_name, new_file_name, str(new_file_id)]
+        download_extract_curse_addon(href)
+    return [addon_name, href, ""]
 
 
-def download_extract_curse_addon(name, file_id):
+def download_extract_curse_addon(href):
     """
     download and extract addon from curseforge.com
-    :param name:
-    :param file_id:
+    :param href:
     :return:
     """
-    print("updating %s ..." % name)
-    url = "https://www.curseforge.com/wow/addons/%s/download/%s/file" % (name, file_id)
-    res = requests.get(url, request_headers)
+    print("updating %s ..." % href)
+    url = "https://www.curseforge.com/%s/file" % (href)
+    res = requests.get(url, request_headers, timeout=60)
     z = zipfile.ZipFile(io.BytesIO(res.content))
     z.extractall(path=config.wow_root)
 
@@ -167,18 +166,22 @@ def fetch_addon_data(addon_name, guess=True):
     for name in names:
         _url = "https://www.curseforge.com/wow/addons/%s/files" % name
         print(_url)
-        _resp = requests.get(_url)
+        _resp = requests.get(_url, timeout=20)
         _soup = BeautifulSoup(_resp.content, "html.parser")
-        _tr_list = _soup.find_all("tr", attrs={"class": "project-file-list__item"})
+        _tr_list = _soup.find("table", attrs={"class": "listing-project-file"}).find_all("tr")
+        _idx = 0
         for _tr in _tr_list:
-            _first_td = _tr.find_all("td")[0]
-            _title = _first_td.span["title"]
-            if _title.lower() == config.release_type.lower():
-                _el = _tr.find("a", attrs={"data-action": "install-file"})
-                break
+            if _idx == 0:
+                _idx += 1
+                continue
+            #_first_td = _tr.find_all("td")[0]
+            #_title = _first_td.span["title"]
+            #if _title.lower() == config.release_type.lower():
+            _el = _tr.find("a", attrs={"class": "button button--hollow mr-2 button--icon-only"})
+            break
         data = None
         if _el:
-            data = json.loads(_el.get("data-action-value"))
+            data = _el.get("href")
             break
     return name, data
 
@@ -208,7 +211,7 @@ def download_meeting_stone(current_file_name):
     :return:
     """
     _url = "http://w.163.com/special/wowsocial/"
-    _resp = requests.get(_url)
+    _resp = requests.get(_url, timeout=20)
     _soup = BeautifulSoup(_resp.content, "html.parser")
     _all = _soup.find("div", attrs={"class": "download-buttons"}).findChildren()
     for a in _all:
